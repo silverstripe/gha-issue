@@ -1,0 +1,46 @@
+name: Create issue
+description: GitHub Action to create an issue as the github-actions user
+
+inputs:
+  title:
+    type: string
+    required: true
+  description:
+    type: string
+    required: true
+
+runs:
+  using: composite
+  steps:
+
+    - name: Create issue
+      shell: bash
+      env:
+        TITLE: ${{ inputs.title }}
+        DESCRIPTION: ${{ inputs.description }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+      run: |
+        # Escape double quotes '"' => '\"'
+        TITLE=${TITLE//\"/\\\"}
+        DESCRIPTION=${DESCRIPTION//\"/\\\"}
+
+        # Create new pull-request via GitHub API
+        # https://docs.github.com/en/rest/issues/issues?apiVersion=2022-11-28#create-an-issue
+        RESP_CODE=$(curl -w %{http_code} -s -o /dev/null \
+        -X POST https://api.github.com/repos/$GITHUB_REPOSITORY/issues \
+        -H "Accept: application/vnd.github.v3+json" \
+        -H "Authorization: token ${{ github.token }}" \
+        -H "X-GitHub-Api-Version: 2022-11-28" \
+        -d @- << EOF
+        {
+          "title": "$TITLE",
+          "body": "$DESCRIPTION"
+        }
+        EOF
+        )
+        if [[ $RESP_CODE == "201" ]]; then
+          echo "New issue created"
+        else
+          echo "Fail to create issue - HTTP response code was $RESP_CODE"
+          exit 1
+        fi
