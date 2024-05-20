@@ -35,7 +35,7 @@ runs:
           echo "Unable to fetch issues - HTTP response code was $RESP_CODE"
           exit 1
         fi
-        ISSUE_NUMBERS=$(jq -r --arg TITLE "$TITLE" '.[] | select(.title == $TITLE) | select(.user.login == "github-actions[bot]" | .number' __issues.json)
+        ISSUE_NUMBERS=$(jq -r --arg var1 "$TITLE" '.[] | select(.title == $var1) | select(.user.login == "github-actions[bot]") | .number' __issues.json)
         for ISSUE_NUMBER in $ISSUE_NUMBERS; do
           # https://docs.github.com/en/rest/issues/issues?apiVersion=2022-11-28#update-an-issue
           RESP_CODE=$(curl -w %{http_code} -s -o __issues.json \
